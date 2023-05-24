@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --ssr handler.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@netlify/vite-plugin-netlify-edge": "^1.1.2"
+  }
+}
