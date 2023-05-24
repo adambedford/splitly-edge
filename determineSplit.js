@@ -1,6 +1,6 @@
 export async function determineSplit(request, context) {
-  // look for existing "test_bucket" cookie
-  const bucketName = 'test_bucket';
+    // look for existing "test_bucket" cookie
+  const bucketName = "test_bucket";
   const bucket = context.cookies.get(bucketName);
 
   // return here if we find a cookie
@@ -15,7 +15,7 @@ export async function determineSplit(request, context) {
   // get a random number between (0-1)
   // this is a basic example and you may want to experiment
   const random = Math.random();
-  const newBucketValue = random <= weighting ? 'a' : 'b';
+  const newBucketValue = random <= weighting ? "a" : "b";
 
   // set the new "test_bucket" cookie
   context.cookies.set({
@@ -24,6 +24,6 @@ export async function determineSplit(request, context) {
   });
 
   return new Response(
-    `You have been assigned ${bucketName} ${newBucketValue}.`
+    `You have been assigned ${bucketName} ${newBucketValue}.`,
   );
 }

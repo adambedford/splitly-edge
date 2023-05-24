@@ -1,19 +1,13 @@
-import { handleRequest } from 'my-framework';
-import staticFiles from '@static-manifest';
+import { determineSplit } from './determineSplit.js';
 
-export const handler = async (request, { next }) => {
+export const handler = async (request, context) => {
   // Handle static files
 
   const { pathname } = new URL(request.url);
 
-  // If your framework generates client assets in a subdirectory, you can add these too
-  if (staticFiles.includes(pathname) || pathname.startsWith('assets/')) {
-    return;
-  }
-
   // "handleRequest" is defined by your framework
   try {
-    return await handleRequest(request);
+    return await determineSplit(request, context);
   } catch (err) {
     return new Response(err.message || 'Internal Server Error', {
       status: err.status || 500,
