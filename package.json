@@ -1,5 +1,6 @@
 {
-  "scripts": {
+  "type": "module",
+    "scripts": {
     "dev": "vite",
     "build": "vite build --ssr handler.js",
     "preview": "vite preview"
