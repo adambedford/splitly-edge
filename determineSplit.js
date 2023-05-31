@@ -13,28 +13,30 @@ function weightedRandom(options) {
   return options[i];
 }
 
+async function fetchSplitTest(path) {
+  const apiBase = Netlify.env.get('API_BASE_URL');
+  const apiToken = Netlify.env.get('EDGE_AUTH_TOKEN');
+  const accountSecret = Netlify.env.get('ACCOUNT_SECRET_TOKEN');
+  
+  const splitTestReq = await fetch(
+    `${apiBase}/api/v0/split_tests?path=${path}`,
+    {
+      headers: {
+        'API-Token': apiToken,
+        'Account-Secret': accountSecret,
+      },
+    }
+  );
+  return await splitTestReq.json();
+}
+
 export async function determineSplit(request, context) {
-  const testName = 'bar';
   const url = new URL(request.url);
   const path = url.pathname;
-
-  const testUrls = [
-    {
-      item: 'https://breathesans.com',
-      weight: 3 / 10,
-    },
-    {
-      item: 'https://breathesans.com/products/sans-for-all-rooms',
-      weight: 3 / 10,
-    },
-    {
-      item: 'https://breathesans.com/pages/purifier',
-      weight: 3 / 10,
-    },
-  ];
+  const testPath = path.replace(/^\/+/g, '');
 
   // Look for existing cookie
-  const bucketName = `splitly-test_${testName}`;
+  const bucketName = `splitly-test_${testPath}`;
   const bucket = context.cookies.get(bucketName);
 
   // return here if we find a cookie
@@ -55,18 +57,31 @@ export async function determineSplit(request, context) {
     // return new Response(content.body, content);
   }
 
-  // If no cookie is found, assign the user to a bucket
-  const option = weightedRandom(testUrls);
-  const urlToFetch = option.item;
+  const splitTest = await fetchSplitTest(testPath);
 
-  // const content = await fetch(urlToFetch);
+  if (splitTest.id) {
+    const testUrls = splitTest.candidates.map((candidate) => {
+      return {
+        item: candidate.url,
+        weight: candidate.weight / 100,
+      };
+    });
 
-  // Set the new cookie
-  context.cookies.set({
-    name: bucketName,
-    value: urlToFetch,
-  });
+    // If no cookie is found, assign the user to a bucket
+    const option = weightedRandom(testUrls);
+    const urlToFetch = option.item;
 
-  return Response.redirect(urlToFetch);
-  // return new Response(content.body, content);
+    // const content = await fetch(urlToFetch);
+
+    // Set the new cookie
+    context.cookies.set({
+      name: bucketName,
+      value: urlToFetch,
+    });
+
+    return Response.redirect(urlToFetch);
+    // return new Response(content.body, content);
+  } else {
+    return new Response('Nothing to see here.')
+  }
 }
