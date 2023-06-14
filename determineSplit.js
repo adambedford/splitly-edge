@@ -27,7 +27,9 @@ async function fetchSplitTest(path) {
       },
     }
   );
-  return await splitTestReq.json();
+  const splitTest = await splitTestReq.json();
+  console.log(splitTest)
+  return splitTest
 }
 
 export async function determineSplit(request, context) {
@@ -66,6 +68,8 @@ export async function determineSplit(request, context) {
         weight: candidate.weight / 100,
       };
     });
+
+    console.log(testUrls)
 
     // If no cookie is found, assign the user to a bucket
     const option = weightedRandom(testUrls);
