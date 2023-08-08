@@ -1,12 +1,13 @@
 {
   "type": "module",
-    "scripts": {
+  "scripts": {
     "dev": "vite",
-    "build": "vite build --ssr handler.js",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@netlify/vite-plugin-netlify-edge": "^1.1.2",
     "vite": "^4.3.8"
-  }
+  },
+  "dependencies": {}
 }

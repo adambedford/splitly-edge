@@ -1,17 +1,7 @@
-function weightedRandom(options) {
-  var i;
-  var weights = [options[0].weight];
-
-  for (i = 1; i < options.length; i++) {
-    weights[i] = options[i].weight + weights[i - 1];
-  }
-
-  var random = Math.random() * weights[weights.length - 1];
-
-  for (i = 0; i < weights.length; i++) if (weights[i] > random) break;
-
-  return options[i];
-}
+import * as dayjs from 'dayjs';
+import generateToken from './utils/generateToken.js';
+import {trackEvent, trackVisit} from './utils/track.js';
+import weightedRandom from './utils/weightedRandom.js';
 
 async function fetchSplitTest(path) {
   const apiBase = Netlify.env.get('API_BASE_URL');
@@ -28,25 +18,59 @@ async function fetchSplitTest(path) {
     }
   );
   const splitTest = await splitTestReq.json();
-  console.log(splitTest)
   return splitTest
 }
 
+function cookieExpiry(days) {
+    let date = new Date();
+    const expiresDays = date.setDate(date.getDate() + days);
+    return expiresDays * 1000;
+
+}
+
+function getOrSetCookie(context, name, value) {
+  let existing = context.cookies.get(name)
+
+  if(!existing) {
+    existing = value
+    const expires = cookieExpiry(365)
+
+    context.cookies.set({
+      name,
+      value,
+      expires
+    }) 
+  }
+  return existing
+}
+
+function paramsToObject(entries) {
+  const result = {};
+  for (const [key, value] of entries) {
+    // each 'entry' is a [key, value] tupple
+    result[key] = value;
+  }
+  return result;
+}
+
 export async function determineSplit(request, context) {
-  const url = new URL(request.url);
-  const path = url.pathname;
+  const requestUrl = new URL(request.url);
+  const path = requestUrl.pathname;
   const testPath = path.replace(/^\/+/g, '');
 
   // Look for existing cookie
   const bucketName = `splitly-test_${testPath}`;
   const bucket = context.cookies.get(bucketName);
 
+  const queryParams = requestUrl.searchParams
+  const referrer = request.referrer
+
   // return here if we find a cookie
   if (bucket) {
     // const bucketUrl = new URL(bucket);
     // const bucketPath = bucketUrl.pathname;
     // console.log('BUCKET PATH: ', bucketPath);
-    // console.log('REQUEST HOST: ', url.hostname);
+    // console.log('REQUEST HOST: ', requestUrl.hostname);
     // console.log('REQUEST PATH: ', path);
     // let content;
     // if (path === `/${testName}`) {
@@ -55,7 +79,35 @@ export async function determineSplit(request, context) {
     //   content = await fetch(`https://${bucketUrl.hostname}${path}`);
     // }
 
-    return Response.redirect(bucket);
+    // const scid = context.cookies.get('splitly-scid');
+    // // const scid = (existingSuid || generateToken())
+    // if(!scid) {
+    //   context.cookies.set({
+    //     name: 'splitly-scid',
+    //     value: generateToken(),
+    //   });
+    // }
+
+    const scid = getOrSetCookie(context, 'splitly-scid', generateToken())
+    
+    let targetUrl = new URL(bucket);
+    targetUrl.searchParams.append('scid', scid);
+    
+    const svtid = getOrSetCookie(context, 'splitly-svtid', generateToken());
+    targetUrl.searchParams.append('svtid', svtid); 
+    
+    const svid = generateToken()
+    targetUrl.searchParams.append('svid', svid);
+
+    await trackVisit({
+      scid,
+      svid,
+      svtid,
+      landing_page: requestUrl,
+      ...paramsToObject(queryParams)
+    });
+
+    return Response.redirect(targetUrl);
     // return new Response(content.body, content);
   }
 
@@ -64,16 +116,15 @@ export async function determineSplit(request, context) {
   if (splitTest.id) {
     const testUrls = splitTest.candidates.map((candidate) => {
       return {
-        item: candidate.url,
+        item: candidate,
         weight: candidate.weight / 100,
       };
     });
 
-    console.log(testUrls)
-
     // If no cookie is found, assign the user to a bucket
     const option = weightedRandom(testUrls);
-    const urlToFetch = option.item;
+    const urlToFetch = option.item.url;
+    let targetUrl = new URL(urlToFetch);
 
     // const content = await fetch(urlToFetch);
 
@@ -81,9 +132,36 @@ export async function determineSplit(request, context) {
     context.cookies.set({
       name: bucketName,
       value: urlToFetch,
+      expires: cookieExpiry(30)
     });
 
-    return Response.redirect(urlToFetch);
+    const scid = option.item.uuid;
+
+    context.cookies.set({
+      name: 'splitly-scid',
+      value: scid,
+      expires: cookieExpiry(30)
+    })
+    targetUrl.searchParams.append('scid', scid);
+    
+    const svtid = getOrSetCookie(context, 'splitly-svtid', generateToken());
+    targetUrl.searchParams.append('svtid', svtid); 
+  
+    const svid = generateToken();
+    targetUrl.searchParams.append('svid', svid);
+
+    // scid = Candidate UUID
+    // svid = Ahoy Visit Token
+    // svtid = Ahoy Visitor Token
+    await trackVisit({
+      scid,
+      svid,
+      svtid,
+      landing_page: requestUrl,
+      ...paramsToObject(queryParams),
+    });
+
+    return Response.redirect(targetUrl);
     // return new Response(content.body, content);
   } else {
     return new Response('Nothing to see here.')

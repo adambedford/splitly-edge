@@ -1,6 +1,10 @@
 [[edge_functions]]
+  path = "/_track"
+  function = "track"
+
+[[edge_functions]]
   path = "/*"
-  function = "handler"
+  function = "splitHandler"
 
 [functions]
 deno_import_map = "./import_map.json"

@@ -1,4 +1,4 @@
-import { determineSplit } from './../../determineSplit.js';
+import { determineSplit } from '../../determineSplit.js';
 
 export default async function(request, context) {
   try {
