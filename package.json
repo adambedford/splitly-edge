@@ -5,9 +5,6 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "@netlify/vite-plugin-netlify-edge": "^1.1.2",
-    "vite": "^4.3.8"
-  },
+  "devDependencies": {},
   "dependencies": {}
 }
