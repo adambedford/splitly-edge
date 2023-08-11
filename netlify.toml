@@ -1,3 +1,10 @@
+[dev]
+  framework = "#static"
+
+[build]
+  command = "echo No build for this app"
+  publich = "public"
+
 [[edge_functions]]
   path = "/_track"
   function = "track"
@@ -5,6 +12,10 @@
 [[edge_functions]]
   path = "/*"
   function = "splitHandler"
+
+[[redirects]]
+  from = "/track.js"
+  to = "https://unpkg.com/splitly-tracker@0.0.1/dist/sp-tr.umd.js"
 
 [functions]
 deno_import_map = "./import_map.json"
