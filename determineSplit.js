@@ -1,4 +1,3 @@
-import * as dayjs from 'dayjs';
 import generateToken from './utils/generateToken.js';
 import {trackEvent, trackVisit} from './utils/track.js';
 import weightedRandom from './utils/weightedRandom.js';
@@ -25,7 +24,6 @@ function cookieExpiry(days) {
     let date = new Date();
     const expiresDays = date.setDate(date.getDate() + days);
     return expiresDays * 1000;
-
 }
 
 function getOrSetCookie(context, name, value) {

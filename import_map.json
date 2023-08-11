@@ -1,7 +1,6 @@
 {
   "imports": {
     "lodash": "https://cdn.skypack.dev/lodash",
-    "uuid": "https://jspm.dev/uuid",
-    "dayjs": "https://unpkg.com/dayjs"
+    "uuid": "https://jspm.dev/uuid"
   }
 }
