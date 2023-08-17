@@ -10,12 +10,16 @@
   function = "track"
 
 [[edge_functions]]
+  path = "/tracker.js"
+  function = "tracker"
+
+[[edge_functions]]
   path = "/*"
   function = "splitHandler"
 
-[[redirects]]
-  from = "/track.js"
-  to = "https://unpkg.com/splitly-tracker@0.0.1/dist/sp-tr.umd.js"
+# [[redirects]]
+#   from = "/track.js"
+#   to = "https://unpkg.com/splitly-tracker@0.0.1/dist/sp-tr.umd.js"
 
 [functions]
 deno_import_map = "./import_map.json"

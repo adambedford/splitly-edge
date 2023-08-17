@@ -1,9 +1,10 @@
 import generateToken from './utils/generateToken.js';
 import {trackEvent, trackVisit} from './utils/track.js';
 import weightedRandom from './utils/weightedRandom.js';
+import psl from 'psl'
 
 async function fetchSplitTest(path) {
-  const apiBase = Netlify.env.get('API_BASE_URL');
+  const apiBase = Netlify.env.get('API_BASE_URL') || 'http://localhost:3001';
   const apiToken = Netlify.env.get('EDGE_AUTH_TOKEN');
   const accountSecret = Netlify.env.get('ACCOUNT_SECRET_TOKEN');
   
@@ -28,6 +29,9 @@ function cookieExpiry(days) {
 
 function getOrSetCookie(context, name, value) {
   let existing = context.cookies.get(name)
+  const siteUrl = Netlify.env.get('SITE_URL')
+  const parsed = psl.parse(siteUrl)
+  const domain = parsed.domain
 
   if(!existing) {
     existing = value
@@ -36,7 +40,9 @@ function getOrSetCookie(context, name, value) {
     context.cookies.set({
       name,
       value,
-      expires
+      expires,
+      domain: domain,
+      sameSite: 'lax'
     }) 
   }
   return existing
@@ -61,7 +67,6 @@ export async function determineSplit(request, context) {
   const bucket = context.cookies.get(bucketName);
 
   const queryParams = requestUrl.searchParams
-  const referrer = request.referrer
 
   // return here if we find a cookie
   if (bucket) {

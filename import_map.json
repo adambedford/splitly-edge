@@ -1,6 +1,7 @@
 {
   "imports": {
     "lodash": "https://cdn.skypack.dev/lodash",
-    "uuid": "https://jspm.dev/uuid"
+    "uuid": "https://jspm.dev/uuid",
+    "psl": "https://jspm.dev/psl"
   }
 }
