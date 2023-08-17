@@ -41,7 +41,7 @@ function getOrSetCookie(context, name, value) {
       name,
       value,
       expires,
-      domain: domain,
+      domain: `.${domain}`,
       sameSite: 'lax'
     }) 
   }
