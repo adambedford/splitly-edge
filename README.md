@@ -3,12 +3,6 @@
 ## Add Script to Site
 
 ```javascript
-function(r,u,b,i,x){
-if(r[b])return;r[b]=[];r.rubix=function(){
-r[b].push(arguments)};x=u.createElement('script');
-x.async=!0;x.src='https://rubix.click/pixels.js';
-u.head.appendChild(x)}(window,document,'rbxfn');
-
 !function(s,p,l,i,t){
   if(s[l]) return;
   s[l] = [];
@@ -17,16 +11,27 @@ u.head.appendChild(x)}(window,document,'rbxfn');
   t.src='YOUR_SITE_SUBDOMAIN/tracker.js';
   p.head.appendChild(t)
 }(window, document, 'splfn')
-
-
-
-var tag = document.createElement("script");
-tag.src = "YOUR_SITE_SUBDOMAIN/tracker.js";
-document.getElementsByTagName("head")[0].appendChild(tag);
 ```
 
 ## Shopify Pixel Installation
 
 ```javascript
+analytics.subscribe("checkout_completed", event => {
+  splitly.trackEvent("purchase", {
+    amount: event.data.checkout.subtotalPrice.amount
+    currency: event.data.checkout.currencyCode
+  })
+})
 
+analytics.subscribe("product_added_to_cart", event => {
+  splitly.trackEvent("add_to_cart", {
+    product_id: event.data.cartLine.merchandise.product.id,
+    product_title: event.data.cartLine.merchandise.product.title,
+    product_variant_id: event.data.cartLine.merchandise.id,
+    product_variant_title: event.data.cartLine.merchandise.title,
+    quantity: event.data.cartLine.quantity,
+    amount: event.data.cartLine.cost.totalAmount.amount
+    currency: event.data.cartLine.cost.totalAmount.currencyCode
+  })
+})
 ```
