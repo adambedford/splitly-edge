@@ -18,7 +18,7 @@
 ```javascript
 analytics.subscribe("checkout_completed", event => {
   splitly.trackEvent("purchase", {
-    amount: event.data.checkout.subtotalPrice.amount
+    amount: event.data.checkout.subtotalPrice.amount,
     currency: event.data.checkout.currencyCode
   })
 })
@@ -30,7 +30,7 @@ analytics.subscribe("product_added_to_cart", event => {
     product_variant_id: event.data.cartLine.merchandise.id,
     product_variant_title: event.data.cartLine.merchandise.title,
     quantity: event.data.cartLine.quantity,
-    amount: event.data.cartLine.cost.totalAmount.amount
+    amount: event.data.cartLine.cost.totalAmount.amount,
     currency: event.data.cartLine.cost.totalAmount.currencyCode
   })
 })
