@@ -1,4 +1,5 @@
 import generateToken from './utils/generateToken.js';
+import paramsToObject from './utils/paramsToObject.js';
 import {trackEvent, trackVisit} from './utils/track.js';
 import weightedRandom from './utils/weightedRandom.js';
 import psl from 'psl'
@@ -46,15 +47,6 @@ function getOrSetCookie(context, name, value) {
     }) 
   }
   return existing
-}
-
-function paramsToObject(entries) {
-  const result = {};
-  for (const [key, value] of entries) {
-    // each 'entry' is a [key, value] tupple
-    result[key] = value;
-  }
-  return result;
 }
 
 export async function determineSplit(request, context) {
