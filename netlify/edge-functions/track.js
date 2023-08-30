@@ -13,13 +13,17 @@ export default async function (request, content) {
 
   const requestUrl = new URL(request.url);
   const queryParams = paramsToObject(requestUrl.searchParams);
+  const name = queryParams.name
+  delete queryParams.name
+
 
   const body = {
     visit_token: queryParams.svid,
     visitor_token: queryParams.svtid,
     events: [
       {
-        ...queryParams,
+        name,
+        properties: queryParams,
       },
     ],
   };
