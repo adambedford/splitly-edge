@@ -8,9 +8,10 @@ async function fetchSplitTest(path) {
   const apiBase = Netlify.env.get('API_BASE_URL') || 'http://localhost:3001';
   const apiToken = Netlify.env.get('EDGE_AUTH_TOKEN');
   const accountSecret = Netlify.env.get('ACCOUNT_SECRET_TOKEN');
+  const siteUrl = Netlify.env.get('SITE_URL');
   
   const splitTestReq = await fetch(
-    `${apiBase}/api/v0/split_tests?path=${path}`,
+    `${apiBase}/api/v0/split_tests?path=${path}&site_url=${siteUrl}`,
     {
       headers: {
         'API-Token': apiToken,
