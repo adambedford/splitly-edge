@@ -1,15 +1,15 @@
 import generateToken from './utils/generateToken.js';
 import paramsToObject from './utils/paramsToObject.js';
-import {trackEvent, trackVisit} from './utils/track.js';
+import { trackEvent, trackVisit } from './utils/track.js';
 import weightedRandom from './utils/weightedRandom.js';
-import psl from 'psl'
+import psl from 'psl';
 
 async function fetchSplitTest(path) {
   const apiBase = Netlify.env.get('API_BASE_URL') || 'http://localhost:3001';
   const apiToken = Netlify.env.get('EDGE_AUTH_TOKEN');
   const accountSecret = Netlify.env.get('ACCOUNT_SECRET_TOKEN');
   const siteUrl = Netlify.env.get('SITE_URL');
-  
+
   const splitTestReq = await fetch(
     `${apiBase}/api/v0/split_tests?path=${path}&site_url=${siteUrl}`,
     {
@@ -20,34 +20,43 @@ async function fetchSplitTest(path) {
     }
   );
   const splitTest = await splitTestReq.json();
-  return splitTest
+  return splitTest;
 }
 
 function cookieExpiry(days) {
-    let date = new Date();
-    const expiresDays = date.setDate(date.getDate() + days);
-    return expiresDays * 1000;
+  let date = new Date();
+  const expiresDays = date.setDate(date.getDate() + days);
+  return expiresDays * 1000;
 }
 
 function getOrSetCookie(context, name, value) {
-  let existing = context.cookies.get(name)
-  const siteUrl = Netlify.env.get('SITE_URL')
-  const parsed = psl.parse(siteUrl)
-  const domain = parsed.domain
+  let existing = context.cookies.get(name);
+  const siteUrl = Netlify.env.get('SITE_URL');
+  const parsed = psl.parse(siteUrl);
+  const domain = parsed.domain;
 
-  if(!existing) {
-    existing = value
-    const expires = cookieExpiry(365)
+  if (!existing) {
+    existing = value;
+    const expires = cookieExpiry(365);
 
     context.cookies.set({
       name,
       value,
       expires,
       domain: `.${domain}`,
-      sameSite: 'lax'
-    }) 
+      sameSite: 'lax',
+    });
   }
-  return existing
+  return existing;
+}
+
+function combineSearchParams(searchParams1, searchParams2) {
+  // Display the key/value pairs
+  for (let [key, val] of searchParams2.entries()) {
+    searchParams1.append(key, val);
+  }
+
+  return searchParams1;
 }
 
 export async function determineSplit(request, context) {
@@ -59,7 +68,7 @@ export async function determineSplit(request, context) {
   const bucketName = `splitly-test_${testPath}`;
   const bucket = context.cookies.get(bucketName);
 
-  const queryParams = requestUrl.searchParams
+  const queryParams = requestUrl.searchParams;
 
   // return here if we find a cookie
   if (bucket) {
@@ -84,23 +93,25 @@ export async function determineSplit(request, context) {
     //   });
     // }
 
-    const scid = getOrSetCookie(context, 'splitly-scid', generateToken())
-    
+    const scid = getOrSetCookie(context, 'splitly-scid', generateToken());
+
     let targetUrl = new URL(bucket);
     targetUrl.searchParams.append('scid', scid);
-    
+
     const svtid = getOrSetCookie(context, 'splitly-svtid', generateToken());
-    targetUrl.searchParams.append('svtid', svtid); 
-    
-    const svid = generateToken()
+    targetUrl.searchParams.append('svtid', svtid);
+
+    const svid = generateToken();
     targetUrl.searchParams.append('svid', svid);
+
+    combineSearchParams(targetUrl.searchParams, queryParams);
 
     await trackVisit({
       scid,
       svid,
       svtid,
       landing_page: requestUrl,
-      ...paramsToObject(queryParams)
+      ...paramsToObject(queryParams),
     });
 
     return Response.redirect(targetUrl);
@@ -128,7 +139,7 @@ export async function determineSplit(request, context) {
     context.cookies.set({
       name: bucketName,
       value: urlToFetch,
-      expires: cookieExpiry(30)
+      expires: cookieExpiry(30),
     });
 
     const scid = option.item.uuid;
@@ -136,15 +147,17 @@ export async function determineSplit(request, context) {
     context.cookies.set({
       name: 'splitly-scid',
       value: scid,
-      expires: cookieExpiry(30)
-    })
+      expires: cookieExpiry(30),
+    });
     targetUrl.searchParams.append('scid', scid);
-    
+
     const svtid = getOrSetCookie(context, 'splitly-svtid', generateToken());
-    targetUrl.searchParams.append('svtid', svtid); 
-  
+    targetUrl.searchParams.append('svtid', svtid);
+
     const svid = generateToken();
     targetUrl.searchParams.append('svid', svid);
+
+    combineSearchParams(targetUrl.searchParams, queryParams);
 
     // scid = Candidate UUID
     // svid = Ahoy Visit Token
@@ -160,6 +173,6 @@ export async function determineSplit(request, context) {
     return Response.redirect(targetUrl);
     // return new Response(content.body, content);
   } else {
-    return new Response('Nothing to see here.')
+    return new Response('Nothing to see here.');
   }
 }
